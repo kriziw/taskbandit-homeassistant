@@ -3,14 +3,34 @@
     "step": {
       "user": {
         "title": "Mit TaskBandit verbinden",
-        "description": "Erstelle in TaskBandit unter Einstellungen → Integrationen → Home Assistant ein Token.",
+        "description": "Wo läuft dein TaskBandit? Erstelle zuerst in TaskBandit unter Einstellungen → Home Assistant ein Token.",
+        "menu_options": {
+          "cloud": "TaskBandit Cloud",
+          "self_hosted": "Eigener Server"
+        }
+      },
+      "cloud": {
+        "title": "TaskBandit Cloud",
+        "description": "Füge das Token ein, das du in TaskBandit unter Einstellungen → Home Assistant erstellt hast.",
         "data": {
-          "url": "Serveradresse",
           "token": "Token"
         },
         "data_description": {
-          "url": "Die vollständige Adresse, unter der du TaskBandit im Browser öffnest",
           "token": "Das Token, das mit tbha_ beginnt"
+        }
+      },
+      "self_hosted": {
+        "title": "Eigener TaskBandit-Server",
+        "description": "Gib die Adresse deines Servers ein (bereits ausgefüllt, wenn Home Assistant ihn im Netzwerk gefunden hat) und das Token aus Einstellungen → Home Assistant.",
+        "data": {
+          "url": "Serveradresse",
+          "token": "Token",
+          "verify_ssl": "Zertifikat prüfen"
+        },
+        "data_description": {
+          "url": "Die Adresse deines TaskBandit-Servers mit Port",
+          "token": "Das Token, das mit tbha_ beginnt",
+          "verify_ssl": "Nur ausschalten, wenn dein Server ein selbst signiertes Zertifikat nutzt"
         }
       },
       "reauth_confirm": {
@@ -32,7 +52,8 @@
       "already_configured": "Dieser Haushalt ist bereits eingerichtet.",
       "reauth_successful": "Das Token wurde aktualisiert.",
       "wrong_household": "Dieses Token gehört zu einem anderen Haushalt."
-    }
+    },
+    "flow_title": "TaskBandit ({url})"
   },
   "options": {
     "step": {

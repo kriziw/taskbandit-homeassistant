@@ -3,14 +3,34 @@
     "step": {
       "user": {
         "title": "Csatlakozás a TaskBandithez",
-        "description": "Hozz létre egy tokent a TaskBanditben: Beállítások → Integrációk → Home Assistant.",
+        "description": "Hol fut a TaskBanditod? Előbb hozz létre egy tokent a TaskBanditban: Beállítások → Home Assistant.",
+        "menu_options": {
+          "cloud": "TaskBandit Cloud",
+          "self_hosted": "Saját szerver"
+        }
+      },
+      "cloud": {
+        "title": "TaskBandit Cloud",
+        "description": "Illeszd be a TaskBanditban (Beállítások → Home Assistant) létrehozott tokent.",
         "data": {
-          "url": "Szerver címe",
           "token": "Token"
         },
         "data_description": {
-          "url": "A teljes cím, amelyen a TaskBanditet a böngészőben megnyitod",
           "token": "A tbha_ kezdetű token"
+        }
+      },
+      "self_hosted": {
+        "title": "Saját TaskBandit szerver",
+        "description": "Add meg a szervered címét (ki van töltve, ha a Home Assistant megtalálta a hálózaton) és a tokent (Beállítások → Home Assistant).",
+        "data": {
+          "url": "Szerver címe",
+          "token": "Token",
+          "verify_ssl": "Tanúsítvány ellenőrzése"
+        },
+        "data_description": {
+          "url": "A TaskBandit szervered címe porttal",
+          "token": "A tbha_ kezdetű token",
+          "verify_ssl": "Csak akkor kapcsold ki, ha a szervered saját aláírású tanúsítványt használ"
         }
       },
       "reauth_confirm": {
@@ -32,7 +52,8 @@
       "already_configured": "Ez a háztartás már be van állítva.",
       "reauth_successful": "A token frissült.",
       "wrong_household": "Ez a token egy másik háztartáshoz tartozik."
-    }
+    },
+    "flow_title": "TaskBandit ({url})"
   },
   "options": {
     "step": {

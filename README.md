@@ -55,9 +55,17 @@ The integration polls TaskBandit every 60 seconds (you can change this). If Home
    - `presence` to report who is home
    
    Also choose which member it acts as. The token (`tbha_…`) is shown only once.
-2. In Home Assistant, go to **Settings → Devices & services → Add integration → TaskBandit**.
-3. Enter your TaskBandit server address (for example `https://taskbandit.example.com`) and the token.
-4. Optional: turn on **Presence** in TaskBandit's settings. Then open the integration's **Configure** dialog and pick a TaskBandit member for each Home Assistant person.
+2. In Home Assistant, go to **Settings → Devices & services → Add integration → TaskBandit**, then pick where your TaskBandit runs:
+   - **TaskBandit Cloud:** paste the token. That's all; your household is found from the token.
+   - **Self-hosted server:** enter your server's address, for example `http://192.168.1.10:8080`, and the token. Turn off **Check the certificate** only if your server uses a self-signed certificate.
+
+   A self-hosted server on your network usually shows up by itself as **Discovered: TaskBandit**, with the address already filled in, so you only paste the token. The server announces itself over mDNS (`_taskbandit._tcp`). In Docker that needs host networking or an Avahi service file on the host; see TaskBandit's `docs/home-assistant.md`.
+3. Optional: turn on **Presence** in TaskBandit's settings. Then open the integration's **Configure** dialog and pick a TaskBandit member for each Home Assistant person.
+
+**Instant updates:** besides polling, the integration registers a webhook so TaskBandit can push changes.
+- **TaskBandit Cloud** needs Home Assistant reachable over public HTTPS, for example through Home Assistant Cloud.
+- **A self-hosted server** can use Home Assistant's local address.
+- **Otherwise** it simply polls.
 
 > Screenshot: the setup dialog *(placeholder)*
 

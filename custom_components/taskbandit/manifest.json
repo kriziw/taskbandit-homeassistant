@@ -1,14 +1,23 @@
 {
   "domain": "taskbandit",
   "name": "TaskBandit",
-  "after_dependencies": ["cloud"],
-  "codeowners": ["@kriziw"],
+  "after_dependencies": [
+    "cloud"
+  ],
+  "codeowners": [
+    "@kriziw"
+  ],
   "config_flow": true,
-  "dependencies": ["webhook"],
+  "dependencies": [
+    "webhook"
+  ],
   "documentation": "https://github.com/kriziw/taskbandit-homeassistant",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/kriziw/taskbandit-homeassistant/issues",
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "zeroconf": [
+    "_taskbandit._tcp.local."
+  ]
 }

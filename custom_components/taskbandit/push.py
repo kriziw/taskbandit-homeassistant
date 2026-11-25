@@ -18,6 +18,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .api import TaskBanditClient, TaskBanditError, TaskBanditScopeError
 from .const import (
+    CONF_HOSTED,
     CONF_CLOUDHOOK,
     CONF_WEBHOOK_SECRET,
     DOMAIN,
@@ -58,9 +59,13 @@ def verify_signature(
 
 
 async def _async_webhook_url(
-    hass: HomeAssistant, webhook_id: str
+    hass: HomeAssistant, webhook_id: str, hosted: bool = True
 ) -> tuple[str | None, bool]:
-    """Return the URL TaskBandit should call, and whether it is a cloudhook."""
+    """Return the URL TaskBandit should call, and whether it is a cloudhook.
+
+    TaskBandit Cloud can only call public HTTPS addresses; a self-hosted server
+    on the local network can also call Home Assistant's internal address.
+    """
     if "cloud" in hass.config.components:
         from homeassistant.components import cloud  # noqa: PLC0415
 
@@ -70,7 +75,12 @@ async def _async_webhook_url(
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("Could not create a Home Assistant Cloud webhook: %s", err)
     try:
-        base = get_url(hass, prefer_external=True, allow_internal=False)
+        base = get_url(
+            hass,
+            prefer_external=True,
+            allow_internal=not hosted,
+            require_ssl=hosted,
+        )
     except NoURLAvailableError:
         return None, False
     return f"{base}{webhook.async_generate_path(webhook_id)}", False
@@ -80,7 +90,9 @@ async def async_setup_push(hass: HomeAssistant, entry: TaskBanditConfigEntry) ->
     """Register an HA webhook and tell TaskBandit about it."""
     runtime = entry.runtime_data
     webhook_id = entry.data.get(CONF_WEBHOOK_ID) or webhook.async_generate_id()
-    url, is_cloudhook = await _async_webhook_url(hass, webhook_id)
+    url, is_cloudhook = await _async_webhook_url(
+        hass, webhook_id, hosted=entry.data.get(CONF_HOSTED, True)
+    )
     if url is None:
         LOGGER.info(
             "Home Assistant has no external URL, so TaskBandit can't push changes; "

@@ -55,11 +55,11 @@ class TaskBanditPresenceDisabledError(TaskBanditApiError):
     """The household has presence turned off (409 presence_disabled)."""
 
 
-def normalize_url(url: str) -> str:
+def normalize_url(url: str, default_scheme: str = "https") -> str:
     """Return the server address without a trailing slash, with a scheme."""
     url = url.strip().rstrip("/")
     if "://" not in url:
-        url = f"https://{url}"
+        url = f"{default_scheme}://{url}"
     if url.endswith(API_PATH):
         url = url[: -len(API_PATH)]
     return url

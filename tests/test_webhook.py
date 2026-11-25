@@ -155,3 +155,29 @@ async def test_no_external_url_polls_only(
     await setup_entry(hass, config_entry, aioclient_mock, state_payload)
     assert not calls_to(aioclient_mock, "PUT", "/webhook")
     assert CONF_WEBHOOK_SECRET not in config_entry.data
+
+
+
+async def test_webhook_address_depends_on_where_taskbandit_runs(hass) -> None:
+    """Cloud needs public HTTPS; a self-hosted server may use the internal address."""
+    from unittest.mock import patch as _patch
+
+    from homeassistant.helpers.network import NoURLAvailableError
+
+    from custom_components.taskbandit import push
+
+    calls = []
+
+    def fake_get_url(_hass, **kwargs):
+        calls.append(kwargs)
+        if kwargs.get("allow_internal"):
+            return "http://192.168.1.20:8123"
+        raise NoURLAvailableError
+
+    with _patch.object(push, "get_url", side_effect=fake_get_url):
+        hosted = await push._async_webhook_url(hass, "abc", hosted=True)
+        local = await push._async_webhook_url(hass, "abc", hosted=False)
+    assert hosted == (None, False)
+    assert local[0].startswith("http://192.168.1.20:8123/api/webhook/abc")
+    assert calls[0]["require_ssl"] is True and calls[0]["allow_internal"] is False
+    assert calls[1]["allow_internal"] is True
