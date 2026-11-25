@@ -10,5 +10,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/kriziw/taskbandit-homeassistant/issues",
   "requirements": [],
+  "zeroconf": ["_taskbandit._tcp.local."],
   "version": "0.1.0"
 }

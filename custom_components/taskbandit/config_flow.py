@@ -13,10 +13,16 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL
+from homeassistant.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -39,6 +45,8 @@ from .api import (
     normalize_url,
 )
 from .const import (
+    CLOUD_URL,
+    CONF_HOSTED,
     CONF_PRESENCE_MAP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -50,12 +58,14 @@ from .models import TaskBanditState, parse_state
 
 NO_MEMBER = "__none__"
 
-USER_SCHEMA = vol.Schema(
+TOKEN_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+
+CLOUD_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): TOKEN_SELECTOR})
+SELF_HOSTED_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-        vol.Required(CONF_TOKEN): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
+        vol.Required(CONF_TOKEN): TOKEN_SELECTOR,
+        vol.Required(CONF_VERIFY_SSL, default=True): BooleanSelector(),
     }
 )
 REAUTH_SCHEMA = vol.Schema(
@@ -67,17 +77,19 @@ REAUTH_SCHEMA = vol.Schema(
 )
 
 
-async def _async_fetch_state(hass: HomeAssistant, url: str, token: str) -> TaskBanditState:
-    client = TaskBanditClient(async_get_clientsession(hass), url, token)
+async def _async_fetch_state(
+    hass: HomeAssistant, url: str, token: str, verify_ssl: bool = True
+) -> TaskBanditState:
+    client = TaskBanditClient(async_get_clientsession(hass, verify_ssl=verify_ssl), url, token)
     return parse_state(await client.get_state())
 
 
 async def _async_validate(
-    hass: HomeAssistant, url: str, token: str
+    hass: HomeAssistant, url: str, token: str, verify_ssl: bool = True
 ) -> tuple[TaskBanditState | None, dict[str, str]]:
     """Call `GET /state`; return the state or a form error."""
     try:
-        state = await _async_fetch_state(hass, url, token)
+        state = await _async_fetch_state(hass, url, token, verify_ssl)
     except TaskBanditAuthError:
         return None, {"base": "invalid_auth"}
     except TaskBanditFeatureDisabledError:
@@ -93,30 +105,92 @@ async def _async_validate(
 
 
 class TaskBanditConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Set up TaskBandit with a server address and token."""
+    """Set up TaskBandit Cloud with just a token, or a self-hosted server.
 
-    VERSION = 1
+    Self-hosted servers announce themselves on the network (`_taskbandit._tcp`);
+    Home Assistant then offers them with the address filled in.
+    """
+
+    VERSION = 2
+
+    def __init__(self) -> None:
+        """Start a flow."""
+        self._discovered_url: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the server and token."""
+        """Ask where TaskBandit runs."""
+        return self.async_show_menu(step_id="user", menu_options=["cloud", "self_hosted"])
+
+    async def async_step_cloud(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """TaskBandit Cloud: only the token."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            url = normalize_url(user_input[CONF_URL])
             token = user_input[CONF_TOKEN].strip()
-            state, errors = await _async_validate(self.hass, url, token)
+            state, errors = await _async_validate(self.hass, CLOUD_URL, token)
             if state is not None:
-                await self.async_set_unique_id(state.household_id)
-                self._abort_if_unique_id_configured(updates={CONF_URL: url, CONF_TOKEN: token})
-                return self.async_create_entry(
-                    title=state.household_name, data={CONF_URL: url, CONF_TOKEN: token}
-                )
+                return await self._async_create(state, CLOUD_URL, token, True, True)
+        return self.async_show_form(step_id="cloud", data_schema=CLOUD_SCHEMA, errors=errors)
+
+    async def async_step_self_hosted(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """A self-hosted server: its address (filled in when discovered) and the token."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            url = normalize_url(user_input[CONF_URL], default_scheme="http")
+            token = user_input[CONF_TOKEN].strip()
+            verify_ssl = bool(user_input.get(CONF_VERIFY_SSL, True))
+            state, errors = await _async_validate(self.hass, url, token, verify_ssl)
+            if state is not None:
+                return await self._async_create(state, url, token, False, verify_ssl)
+        suggested = user_input or (
+            {CONF_URL: self._discovered_url} if self._discovered_url else None
+        )
         return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
+            step_id="self_hosted",
+            data_schema=self.add_suggested_values_to_schema(SELF_HOSTED_SCHEMA, suggested),
             errors=errors,
         )
+
+    async def async_step_zeroconf(self, discovery_info: Any) -> ConfigFlowResult:
+        """A self-hosted TaskBandit server announced itself on the network."""
+        properties = getattr(discovery_info, "properties", {}) or {}
+        announced = str(properties.get("api") or "").strip()
+        if announced:
+            url = normalize_url(announced, default_scheme="http")
+        else:
+            host = str(discovery_info.host)
+            if ":" in host:
+                host = f"[{host}]"
+            url = f"http://{host}:{discovery_info.port}"
+        self._async_abort_entries_match({CONF_URL: url})
+        await self.async_set_unique_id(f"discovered:{url}")
+        self._abort_if_unique_id_configured()
+        self._discovered_url = url
+        self.context["title_placeholders"] = {"url": url}
+        return await self.async_step_self_hosted()
+
+    async def _async_create(
+        self,
+        state: TaskBanditState,
+        url: str,
+        token: str,
+        hosted: bool,
+        verify_ssl: bool,
+    ) -> ConfigFlowResult:
+        data = {
+            CONF_URL: url,
+            CONF_TOKEN: token,
+            CONF_HOSTED: hosted,
+            CONF_VERIFY_SSL: verify_ssl,
+        }
+        await self.async_set_unique_id(state.household_id, raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates=data)
+        return self.async_create_entry(title=state.household_name, data=data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -132,7 +206,9 @@ class TaskBanditConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             token = user_input[CONF_TOKEN].strip()
-            state, errors = await _async_validate(self.hass, entry.data[CONF_URL], token)
+            state, errors = await _async_validate(
+                self.hass, entry.data[CONF_URL], token, entry.data.get(CONF_VERIFY_SSL, True)
+            )
             if state is not None:
                 await self.async_set_unique_id(state.household_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_household")
@@ -170,7 +246,10 @@ class TaskBanditOptionsFlow(OptionsFlow):
         else:
             try:
                 state = await _async_fetch_state(
-                    self.hass, entry.data[CONF_URL], entry.data[CONF_TOKEN]
+                    self.hass,
+                    entry.data[CONF_URL],
+                    entry.data[CONF_TOKEN],
+                    entry.data.get(CONF_VERIFY_SSL, True),
                 )
             except (TaskBanditError, ValueError):
                 state = None

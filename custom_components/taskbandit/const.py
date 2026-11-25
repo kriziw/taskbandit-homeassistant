@@ -9,6 +9,10 @@ DOMAIN: Final = "taskbandit"
 LOGGER = logging.getLogger(__package__)
 
 API_PATH: Final = "/api/integrations/home-assistant"
+# TaskBandit Cloud: the household is found from the token, so this is all a hosted user needs.
+CLOUD_URL: Final = "https://api.taskbandit.app"
+# True for TaskBandit Cloud, False for a self-hosted server.
+CONF_HOSTED: Final = "hosted"
 REQUEST_TIMEOUT: Final = 15
 
 CONF_WEBHOOK_SECRET: Final = "webhook_secret"

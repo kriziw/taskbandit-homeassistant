@@ -115,7 +115,8 @@ def config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Home",
         unique_id=HOUSEHOLD_ID,
-        data={CONF_URL: SERVER, CONF_TOKEN: TOKEN},
+        version=2,
+        data={CONF_URL: SERVER, CONF_TOKEN: TOKEN, "hosted": True, "verify_ssl": True},
     )
 
 

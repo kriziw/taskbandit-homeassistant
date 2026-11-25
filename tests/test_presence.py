@@ -19,7 +19,8 @@ def _entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Home",
         unique_id=HOUSEHOLD_ID,
-        data={CONF_URL: SERVER, CONF_TOKEN: TOKEN},
+        version=2,
+        data={CONF_URL: SERVER, CONF_TOKEN: TOKEN, "hosted": True, "verify_ssl": True},
         options={CONF_PRESENCE_MAP: {"person.bea": BEA, "person.tom": TOM}},
     )
 
