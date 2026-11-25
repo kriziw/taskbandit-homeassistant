@@ -9,7 +9,7 @@
           "token": "Token"
         },
         "data_description": {
-          "url": "Die Adresse, unter der du TaskBandit öffnest, z. B. https://taskbandit.example.com",
+          "url": "Die vollständige Adresse, unter der du TaskBandit im Browser öffnest",
           "token": "Das Token, das mit tbha_ beginnt"
         }
       },

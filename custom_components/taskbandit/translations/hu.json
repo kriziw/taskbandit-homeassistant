@@ -9,7 +9,7 @@
           "token": "Token"
         },
         "data_description": {
-          "url": "A cím, amelyen a TaskBanditet megnyitod, például https://taskbandit.example.com",
+          "url": "A teljes cím, amelyen a TaskBanditet a böngészőben megnyitod",
           "token": "A tbha_ kezdetű token"
         }
       },
