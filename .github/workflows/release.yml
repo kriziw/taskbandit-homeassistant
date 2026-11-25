@@ -1,0 +1,28 @@
+name: Release
+
+# Push a tag such as v0.1.0 to publish a release with taskbandit.zip for HACS.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set the manifest version from the tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          jq --arg v "$version" '.version = $v' custom_components/taskbandit/manifest.json > manifest.tmp
+          mv manifest.tmp custom_components/taskbandit/manifest.json
+      - name: Zip the integration
+        run: |
+          cd custom_components/taskbandit
+          zip -r "$GITHUB_WORKSPACE/taskbandit.zip" . -x "__pycache__/*"
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" taskbandit.zip --title "$GITHUB_REF_NAME" --generate-notes

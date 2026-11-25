@@ -1,0 +1,159 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit TaskBandit verbinden",
+        "description": "Erstelle in TaskBandit unter Einstellungen → Integrationen → Home Assistant ein Token.",
+        "data": {
+          "url": "Serveradresse",
+          "token": "Token"
+        },
+        "data_description": {
+          "url": "Die Adresse, unter der du TaskBandit öffnest, z. B. https://taskbandit.example.com",
+          "token": "Das Token, das mit tbha_ beginnt"
+        }
+      },
+      "reauth_confirm": {
+        "title": "TaskBandit erneut anmelden",
+        "description": "Das Token für {url} funktioniert nicht mehr. Erstelle in TaskBandit ein neues Token und gib es hier ein.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TaskBandit hat das Token abgelehnt. Prüfe, ob es widerrufen wurde.",
+      "feature_disabled": "Die Home-Assistant-Funktion ist für diesen TaskBandit-Haushalt ausgeschaltet.",
+      "missing_scope": "Das Token darf den Haushaltsstatus nicht lesen.",
+      "cannot_connect": "Der TaskBandit-Server ist nicht erreichbar. Prüfe die Adresse.",
+      "unknown": "TaskBandit hat eine unerwartete Antwort gesendet."
+    },
+    "abort": {
+      "already_configured": "Dieser Haushalt ist bereits eingerichtet.",
+      "reauth_successful": "Das Token wurde aktualisiert.",
+      "wrong_household": "Dieses Token gehört zu einem anderen Haushalt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TaskBandit-Optionen",
+        "description": "Wähle, wie oft abgefragt wird. Wenn Anwesenheit in TaskBandit eingeschaltet ist, ordne jeder Home-Assistant-Person ein TaskBandit-Mitglied zu, um zu melden, wer zu Hause ist.",
+        "data": {
+          "scan_interval": "Abfrageintervall"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "chores_overdue": {
+        "name": "Aufgaben überfällig"
+      }
+    },
+    "button": {
+      "run_routine": {
+        "name": "{routine} ausführen"
+      }
+    },
+    "sensor": {
+      "points": {
+        "name": "{member} Punkte"
+      },
+      "streak": {
+        "name": "{member} Serie"
+      },
+      "open_chores": {
+        "name": "{member} offene Aufgaben"
+      },
+      "overdue_chores": {
+        "name": "{member} überfällige Aufgaben"
+      },
+      "due_today": {
+        "name": "Heute fällige Aufgaben"
+      },
+      "overdue": {
+        "name": "Überfällige Aufgaben"
+      },
+      "goal_progress": {
+        "name": "Zielfortschritt"
+      }
+    },
+    "todo": {
+      "member_chores": {
+        "name": "{member} Aufgaben"
+      },
+      "unassigned_chores": {
+        "name": "Nicht zugewiesene Aufgaben"
+      }
+    }
+  },
+  "issues": {
+    "missing_scope": {
+      "title": "Dem TaskBandit-Token fehlt die Berechtigung {scope}",
+      "description": "Das Token für {household} darf „{scope}“ nicht verwenden. Öffne in TaskBandit Einstellungen → Integrationen → Home Assistant, erstelle ein Token mit dieser Berechtigung und richte die Integration damit neu ein."
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Aufgabe erledigen",
+      "description": "Erledigt eine Aufgabe nach den Freigabe- und Fotoregeln des Haushalts.",
+      "fields": {
+        "chore_id": {
+          "name": "Aufgaben-ID",
+          "description": "Die ID der Aufgabe."
+        },
+        "config_entry_id": {
+          "name": "Haushalt",
+          "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        }
+      }
+    },
+    "start_chore": {
+      "name": "Aufgabe beginnen",
+      "description": "Markiert eine Aufgabe als begonnen.",
+      "fields": {
+        "chore_id": {
+          "name": "Aufgaben-ID",
+          "description": "Die ID der Aufgabe."
+        },
+        "config_entry_id": {
+          "name": "Haushalt",
+          "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        }
+      }
+    },
+    "assign_chore": {
+      "name": "Aufgabe zuweisen",
+      "description": "Weist eine Aufgabe einem Mitglied zu.",
+      "fields": {
+        "chore_id": {
+          "name": "Aufgaben-ID",
+          "description": "Die ID der Aufgabe."
+        },
+        "member_id": {
+          "name": "Mitglieds-ID",
+          "description": "Die ID des Mitglieds, dem sie zugewiesen wird."
+        },
+        "config_entry_id": {
+          "name": "Haushalt",
+          "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        }
+      }
+    },
+    "run_routine": {
+      "name": "Routine ausführen",
+      "description": "Führt eine TaskBandit-Routine aus.",
+      "fields": {
+        "routine_id": {
+          "name": "Routinen-ID",
+          "description": "Die ID der Routine."
+        },
+        "config_entry_id": {
+          "name": "Haushalt",
+          "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        }
+      }
+    }
+  }
+}

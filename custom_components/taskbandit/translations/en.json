@@ -1,0 +1,159 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to TaskBandit",
+        "description": "Create a token in TaskBandit under Settings → Integrations → Home Assistant.",
+        "data": {
+          "url": "Server address",
+          "token": "Token"
+        },
+        "data_description": {
+          "url": "The address you open TaskBandit at, for example https://taskbandit.example.com",
+          "token": "The token starting with tbha_"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate TaskBandit",
+        "description": "The token for {url} no longer works. Create a new token in TaskBandit and enter it here.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TaskBandit rejected the token. Check it hasn't been revoked.",
+      "feature_disabled": "The Home Assistant feature is turned off for this TaskBandit household.",
+      "missing_scope": "The token isn't allowed to read the household status.",
+      "cannot_connect": "Couldn't reach the TaskBandit server. Check the address.",
+      "unknown": "TaskBandit sent an unexpected response."
+    },
+    "abort": {
+      "already_configured": "This household is already set up.",
+      "reauth_successful": "The token was updated.",
+      "wrong_household": "That token belongs to a different household."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TaskBandit options",
+        "description": "Choose how often to poll. When presence is on in TaskBandit, map each Home Assistant person to a TaskBandit member to report who is home.",
+        "data": {
+          "scan_interval": "Poll interval"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "chores_overdue": {
+        "name": "Chores overdue"
+      }
+    },
+    "button": {
+      "run_routine": {
+        "name": "Run {routine}"
+      }
+    },
+    "sensor": {
+      "points": {
+        "name": "{member} points"
+      },
+      "streak": {
+        "name": "{member} streak"
+      },
+      "open_chores": {
+        "name": "{member} open chores"
+      },
+      "overdue_chores": {
+        "name": "{member} overdue chores"
+      },
+      "due_today": {
+        "name": "Chores due today"
+      },
+      "overdue": {
+        "name": "Overdue chores"
+      },
+      "goal_progress": {
+        "name": "Goal progress"
+      }
+    },
+    "todo": {
+      "member_chores": {
+        "name": "{member} chores"
+      },
+      "unassigned_chores": {
+        "name": "Unassigned chores"
+      }
+    }
+  },
+  "issues": {
+    "missing_scope": {
+      "title": "TaskBandit token is missing the {scope} scope",
+      "description": "The token used for {household} isn't allowed to use \"{scope}\". In TaskBandit, open Settings → Integrations → Home Assistant, create a token that includes this scope, then reconfigure the integration with it."
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Complete chore",
+      "description": "Completes a chore, following the household's approval and photo rules.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The id of the chore."
+        },
+        "config_entry_id": {
+          "name": "Household",
+          "description": "The TaskBandit household. Needed only if more than one is set up."
+        }
+      }
+    },
+    "start_chore": {
+      "name": "Start chore",
+      "description": "Marks a chore as in progress.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The id of the chore."
+        },
+        "config_entry_id": {
+          "name": "Household",
+          "description": "The TaskBandit household. Needed only if more than one is set up."
+        }
+      }
+    },
+    "assign_chore": {
+      "name": "Assign chore",
+      "description": "Assigns a chore to a member.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The id of the chore."
+        },
+        "member_id": {
+          "name": "Member ID",
+          "description": "The id of the member to assign it to."
+        },
+        "config_entry_id": {
+          "name": "Household",
+          "description": "The TaskBandit household. Needed only if more than one is set up."
+        }
+      }
+    },
+    "run_routine": {
+      "name": "Run routine",
+      "description": "Runs a TaskBandit routine.",
+      "fields": {
+        "routine_id": {
+          "name": "Routine ID",
+          "description": "The id of the routine."
+        },
+        "config_entry_id": {
+          "name": "Household",
+          "description": "The TaskBandit household. Needed only if more than one is set up."
+        }
+      }
+    }
+  }
+}
