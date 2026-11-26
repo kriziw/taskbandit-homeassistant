@@ -128,7 +128,7 @@
         "step": {
           "init": {
             "title": "Wer ist wer",
-            "description": "Wähle für jedes TaskBandit-Mitglied in {household} die Person in Home Assistant oder „Nicht in Home Assistant“."
+            "description": "Die TaskBandit-Mitglieder von {household} und die Personen in Home Assistant passen nicht mehr zusammen: Jemand kam hinzu oder wurde entfernt. Öffne dies, um die Zuordnung zu aktualisieren.\n\nWähle für jedes TaskBandit-Mitglied in {household} die Person in Home Assistant oder „Nicht in Home Assistant“."
           }
         },
         "error": {
@@ -137,8 +137,7 @@
         "abort": {
           "not_loaded": "TaskBandit ist gerade nicht geladen. Versuche es erneut, sobald es läuft."
         }
-      },
-      "description": "Die TaskBandit-Mitglieder von {household} und die Personen in Home Assistant passen nicht mehr zusammen: Jemand kam hinzu oder wurde entfernt. Öffne dies, um die Zuordnung zu aktualisieren."
+      }
     }
   },
   "services": {

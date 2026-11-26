@@ -128,7 +128,7 @@
         "step": {
           "init": {
             "title": "Ki kicsoda",
-            "description": "Válaszd ki minden TaskBandit-taghoz ({household}) a Home Assistant személyt, vagy a „Nincs a Home Assistantban” lehetőséget."
+            "description": "A(z) {household} TaskBandit-tagjai és a Home Assistant személyei már nem egyeznek: valaki bekerült vagy kikerült. Nyisd meg a hozzárendelés frissítéséhez.\n\nVálaszd ki minden TaskBandit-taghoz ({household}) a Home Assistant személyt, vagy a „Nincs a Home Assistantban” lehetőséget."
           }
         },
         "error": {
@@ -137,8 +137,7 @@
         "abort": {
           "not_loaded": "A TaskBandit most nincs betöltve. Próbáld újra, ha már fut."
         }
-      },
-      "description": "A(z) {household} TaskBandit-tagjai és a Home Assistant személyei már nem egyeznek: valaki bekerült vagy kikerült. Nyisd meg a hozzárendelés frissítéséhez."
+      }
     }
   },
   "services": {

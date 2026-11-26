@@ -128,7 +128,7 @@
         "step": {
           "init": {
             "title": "Who is who",
-            "description": "Pick the Home Assistant person for each TaskBandit member in {household}, or \"Not in Home Assistant\"."
+            "description": "The TaskBandit members of {household} and the people in Home Assistant no longer match up: someone was added or removed. Open this to update who is who.\n\nPick the Home Assistant person for each TaskBandit member in {household}, or \"Not in Home Assistant\"."
           }
         },
         "error": {
@@ -137,8 +137,7 @@
         "abort": {
           "not_loaded": "TaskBandit isn't loaded right now. Try again once it is."
         }
-      },
-      "description": "The TaskBandit members of {household} and the people in Home Assistant no longer match up: someone was added or removed. Open this to update who is who."
+      }
     }
   },
   "services": {
