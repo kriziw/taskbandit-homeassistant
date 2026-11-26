@@ -3,7 +3,7 @@
 [![Validate](https://github.com/kriziw/taskbandit-homeassistant/actions/workflows/validate.yml/badge.svg)](https://github.com/kriziw/taskbandit-homeassistant/actions/workflows/validate.yml)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
 
-A Home Assistant integration for [TaskBandit](https://github.com/kriziw/TaskBandit), the family chore app. It shows each member's chores, points and streaks in Home Assistant, lets you tick chores off and run routines, and tells TaskBandit who is home.
+A Home Assistant integration for [TaskBandit](https://github.com/kriziw/taskbandit-ce), the family chore app. It shows each member's chores, points and streaks in Home Assistant, lets you tick chores off and run routines, and tells TaskBandit who is home.
 
 > Screenshot: device page *(placeholder)*
 >
@@ -28,7 +28,7 @@ The integration polls TaskBandit every 60 seconds (you can change this). If Home
 
 ## Requirements
 
-- TaskBandit with the `home_assistant` feature. Self-hosted installs always have it.
+- TaskBandit with the `home_assistant` feature: the Premium plan on TaskBandit Cloud, or a self-hosted server with a TaskBandit Premium licence.
 - Home Assistant 2025.1 or later.
 - For instant updates: a public HTTPS address for Home Assistant (for example Home Assistant Cloud) with hosted TaskBandit. Self-hosted TaskBandit can use any address it can reach. Push also needs the `webhooks` feature.
 
@@ -59,7 +59,7 @@ The integration polls TaskBandit every 60 seconds (you can change this). If Home
    - **TaskBandit Cloud:** paste the token. That's all; your household is found from the token.
    - **Self-hosted server:** enter your server's address, for example `http://192.168.1.10:8080`, and the token. Turn off **Check the certificate** only if your server uses a self-signed certificate.
 
-   A self-hosted server on your network usually shows up by itself as **Discovered: TaskBandit**, with the address already filled in, so you only paste the token. The server announces itself over mDNS (`_taskbandit._tcp`). In Docker that needs host networking or an Avahi service file on the host; see TaskBandit's `docs/home-assistant.md`.
+   A self-hosted server on your network usually shows up by itself as **Discovered: TaskBandit**, with the address already filled in, so you only paste the token. The server announces itself over mDNS (`_taskbandit._tcp`). In Docker that needs host networking or an Avahi service file on the host.
 3. **Who is who:** for each TaskBandit member, pick their Home Assistant person, or **Not in Home Assistant** for members who don't use it (a child without an HA account, say). It works like matching a robot vacuum's rooms to areas. Matching names are suggested. Home Assistant people nobody is matched to (guests, say) simply aren't TaskBandit members.
    - This decides who gets the credit. A routine button pressed, or a chore ticked off, by an HA user is sent as their member: "Run by Bea · from Home Assistant", points for whoever did an unassigned chore. Automations run without a member, like a scheduled routine.
    - It also decides who is reported home, if you turn on **Presence** in TaskBandit.
