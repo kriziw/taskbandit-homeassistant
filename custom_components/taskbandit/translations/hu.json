@@ -33,6 +33,10 @@
           "verify_ssl": "Csak akkor kapcsold ki, ha a szervered saját aláírású tanúsítványt használ"
         }
       },
+      "members": {
+        "title": "Ki kicsoda",
+        "description": "Válaszd ki minden TaskBandit-taghoz ({household}) a megfelelő Home Assistant személyt, ahogy egy robotporszívó szobáit a területekhez rendeled. Válaszd a „Nincs a Home Assistantban” lehetőséget azoknál, akik nem használják. Akit senkihez nem rendeltél, az egyszerűen nem TaskBandit-tag. Ettől függ, kinek számít, ha valaki rutint indít vagy feladatot pipál ki, és ki van otthonként jelezve."
+      },
       "reauth_confirm": {
         "title": "TaskBandit újrahitelesítése",
         "description": "A(z) {url} tokenje már nem működik. Hozz létre egy újat a TaskBanditben, és add meg itt.",
@@ -46,7 +50,8 @@
       "feature_disabled": "A Home Assistant funkció ki van kapcsolva ebben a TaskBandit háztartásban.",
       "missing_scope": "A token nem olvashatja a háztartás állapotát.",
       "cannot_connect": "A TaskBandit szerver nem érhető el. Ellenőrizd a címet.",
-      "unknown": "A TaskBandit váratlan választ küldött."
+      "unknown": "A TaskBandit váratlan választ küldött.",
+      "person_used_twice": "Egy Home Assistant személy csak egy taghoz rendelhető."
     },
     "abort": {
       "already_configured": "Ez a háztartás már be van állítva.",
@@ -59,11 +64,14 @@
     "step": {
       "init": {
         "title": "TaskBandit beállítások",
-        "description": "Állítsd be, milyen gyakran kérdezzen le. Ha a jelenlét be van kapcsolva a TaskBanditben, rendelj minden Home Assistant személyhez egy TaskBandit tagot, hogy jelezze, ki van otthon.",
+        "description": "Állítsd be, milyen gyakran frissüljön, és melyik Home Assistant személy melyik TaskBandit-tag („Nincs a Home Assistantban” azoknál, akik nem használják).",
         "data": {
           "scan_interval": "Lekérdezési időköz"
         }
       }
+    },
+    "error": {
+      "person_used_twice": "Egy Home Assistant személy csak egy taghoz rendelhető."
     }
   },
   "entity": {
@@ -113,6 +121,24 @@
     "missing_scope": {
       "title": "A TaskBandit tokenből hiányzik a(z) {scope} jogosultság",
       "description": "A(z) {household} tokenje nem használhatja ezt: „{scope}”. A TaskBanditben nyisd meg a Beállítások → Integrációk → Home Assistant oldalt, hozz létre egy tokent ezzel a jogosultsággal, és állítsd be vele újra az integrációt."
+    },
+    "member_mapping": {
+      "title": "Ellenőrizd, ki kicsoda a TaskBanditban",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Ki kicsoda",
+            "description": "Válaszd ki minden TaskBandit-taghoz ({household}) a Home Assistant személyt, vagy a „Nincs a Home Assistantban” lehetőséget."
+          }
+        },
+        "error": {
+          "person_used_twice": "Egy Home Assistant személy csak egy taghoz rendelhető."
+        },
+        "abort": {
+          "not_loaded": "A TaskBandit most nincs betöltve. Próbáld újra, ha már fut."
+        }
+      },
+      "description": "A(z) {household} TaskBandit-tagjai és a Home Assistant személyei már nem egyeznek: valaki bekerült vagy kikerült. Nyisd meg a hozzárendelés frissítéséhez."
     }
   },
   "services": {
@@ -127,6 +153,10 @@
         "config_entry_id": {
           "name": "Háztartás",
           "description": "A TaskBandit háztartás. Csak akkor kell, ha több is be van állítva."
+        },
+        "member_id": {
+          "name": "Elvégezte",
+          "description": "A TaskBandit-tag, aki elvégezte. Alapértelmezés: a műveletet indító Home Assistant felhasználó tagja."
         }
       }
     },
@@ -141,6 +171,10 @@
         "config_entry_id": {
           "name": "Háztartás",
           "description": "A TaskBandit háztartás. Csak akkor kell, ha több is be van állítva."
+        },
+        "member_id": {
+          "name": "Elvégezte",
+          "description": "A TaskBandit-tag, aki elvégezte. Alapértelmezés: a műveletet indító Home Assistant felhasználó tagja."
         }
       }
     },
@@ -173,6 +207,10 @@
         "config_entry_id": {
           "name": "Háztartás",
           "description": "A TaskBandit háztartás. Csak akkor kell, ha több is be van állítva."
+        },
+        "member_id": {
+          "name": "Elvégezte",
+          "description": "A TaskBandit-tag, aki elvégezte. Alapértelmezés: a műveletet indító Home Assistant felhasználó tagja."
         }
       }
     }

@@ -15,6 +15,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
+from .members import member_for_context
 from .const import (
     ATTR_CHORE_ID,
     ATTR_CONFIG_ENTRY_ID,
@@ -30,7 +31,13 @@ from .const import (
 from .coordinator import TaskBanditConfigEntry, async_call_api
 
 _ENTRY = {vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string}
-CHORE_SCHEMA = vol.Schema({vol.Required(ATTR_CHORE_ID): cv.string, **_ENTRY})
+CHORE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CHORE_ID): cv.string,
+        vol.Optional(ATTR_MEMBER_ID): cv.string,
+        **_ENTRY,
+    }
+)
 ASSIGN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CHORE_ID): cv.string,
@@ -38,7 +45,13 @@ ASSIGN_SCHEMA = vol.Schema(
         **_ENTRY,
     }
 )
-ROUTINE_SCHEMA = vol.Schema({vol.Required(ATTR_ROUTINE_ID): cv.string, **_ENTRY})
+ROUTINE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ROUTINE_ID): cv.string,
+        vol.Optional(ATTR_MEMBER_ID): cv.string,
+        **_ENTRY,
+    }
+)
 
 
 def _get_entry(hass: HomeAssistant, call: ServiceCall) -> TaskBanditConfigEntry:
@@ -65,6 +78,13 @@ def _get_entry(hass: HomeAssistant, call: ServiceCall) -> TaskBanditConfigEntry:
     return entries[0]
 
 
+def _doer(hass: HomeAssistant, entry: TaskBanditConfigEntry, call: ServiceCall) -> str | None:
+    """Who did it: an explicit member_id, else the member of the HA user who called."""
+    return call.data.get(ATTR_MEMBER_ID) or member_for_context(
+        hass, dict(entry.options), call.context
+    )
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the TaskBandit services."""
@@ -75,7 +95,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass,
             entry,
             SCOPE_CHORES,
-            entry.runtime_data.client.complete_chore(call.data[ATTR_CHORE_ID]),
+            entry.runtime_data.client.complete_chore(
+                call.data[ATTR_CHORE_ID], _doer(hass, entry, call)
+            ),
         )
         await entry.runtime_data.coordinator.async_request_refresh()
         return {"outcome": outcome}
@@ -86,7 +108,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass,
             entry,
             SCOPE_CHORES,
-            entry.runtime_data.client.start_chore(call.data[ATTR_CHORE_ID]),
+            entry.runtime_data.client.start_chore(
+                call.data[ATTR_CHORE_ID], _doer(hass, entry, call)
+            ),
         )
         await entry.runtime_data.coordinator.async_request_refresh()
         return {"outcome": outcome}
@@ -108,7 +132,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         from .button import async_run_routine  # noqa: PLC0415
 
         entry = _get_entry(hass, call)
-        return await async_run_routine(hass, entry, call.data[ATTR_ROUTINE_ID])
+        return await async_run_routine(
+            hass, entry, call.data[ATTR_ROUTINE_ID], _doer(hass, entry, call)
+        )
 
     for name, handler, schema in (
         (SERVICE_COMPLETE_CHORE, _complete, CHORE_SCHEMA),

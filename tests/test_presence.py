@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
-from custom_components.taskbandit.const import CONF_PRESENCE_MAP, DOMAIN
+from custom_components.taskbandit.const import DOMAIN
 
 from .conftest import API, BEA, HOUSEHOLD_ID, SERVER, TOKEN, TOM, calls_to, setup_entry
 
@@ -19,9 +19,12 @@ def _entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Home",
         unique_id=HOUSEHOLD_ID,
-        version=2,
+        version=3,
         data={CONF_URL: SERVER, CONF_TOKEN: TOKEN, "hosted": True, "verify_ssl": True},
-        options={CONF_PRESENCE_MAP: {"person.bea": BEA, "person.tom": TOM}},
+        options={
+            "member_map": {BEA: "person.bea", TOM: "person.tom"},
+            "known_persons": ["person.bea", "person.tom"],
+        },
     )
 
 

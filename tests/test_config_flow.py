@@ -122,47 +122,47 @@ async def test_reauth(
     assert config_entry.data[CONF_TOKEN] == "tbha_new"
 
 
-async def test_options_flow_presence(
+async def test_options_flow_maps_members(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     state_payload,
 ) -> None:
-    """Persons can be mapped to members while presence is on."""
-    hass.states.async_set("person.bea", "home")
-    hass.states.async_set("person.tom", "not_home")
+    """Configure shows one dropdown per TaskBandit member, named after them."""
+    hass.states.async_set("person.bea", "home", {"friendly_name": "Bea"})
+    hass.states.async_set("person.tom", "not_home", {"friendly_name": "Tom"})
     aioclient_mock.put(f"{API}/presence", status=204)
     await setup_entry(hass, config_entry, aioclient_mock, state_payload)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
     keys = {str(key) for key in result["data_schema"].schema}
-    assert {"scan_interval", "person.bea", "person.tom"} <= keys
+    assert keys == {"scan_interval", "Bea", "Tom"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_SCAN_INTERVAL: 120, "person.bea": BEA, "person.tom": "__none__"},
+        {CONF_SCAN_INTERVAL: 120, "Bea": "person.bea", "Tom": "__not_in_ha__"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        CONF_SCAN_INTERVAL: 120,
-        CONF_PRESENCE_MAP: {"person.bea": BEA},
-    }
+    assert config_entry.options[CONF_SCAN_INTERVAL] == 120
+    assert config_entry.options["member_map"] == {BEA: "person.bea", "m-tom": "__not_in_ha__"}
+    assert config_entry.options["known_persons"] == ["person.bea", "person.tom"]
 
 
-async def test_options_flow_without_presence(
+async def test_options_flow_one_person_per_member(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     state_payload,
 ) -> None:
-    """No person fields while presence is off."""
-    state_payload["presenceEnabled"] = False
-    hass.states.async_set("person.bea", "home")
+    """The same person can't be two members."""
+    hass.states.async_set("person.bea", "home", {"friendly_name": "Bea"})
     await setup_entry(hass, config_entry, aioclient_mock, state_payload)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    keys = {str(key) for key in result["data_schema"].schema}
-    assert keys == {"scan_interval"}
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SCAN_INTERVAL: 60, "Bea": "person.bea", "Tom": "person.bea"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "person_used_twice"}
 
 
 CLOUD_API = "https://api.taskbandit.app/api/integrations/home-assistant"
@@ -300,6 +300,41 @@ async def test_version_1_entries_are_migrated(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.data["hosted"] is True
     assert entry.data["verify_ssl"] is True
+
+
+async def test_setup_asks_who_is_who_and_suggests_by_name(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, state_payload
+) -> None:
+    """After the token, each member gets a person; names that match are suggested."""
+    hass.states.async_set("person.bea_smith", "home", {"friendly_name": "Bea Smith"})
+    hass.states.async_set("person.guest", "home", {"friendly_name": "Guest"})
+    aioclient_mock.get(f"{CLOUD_API}/state", json=state_payload)
+    flow_id = await _start(hass, "cloud")
+    result = await hass.config_entries.flow.async_configure(flow_id, {CONF_TOKEN: TOKEN})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "members"
+    defaults = {str(key): key.default() for key in result["data_schema"].schema}
+    assert defaults == {"Bea": "person.bea_smith", "Tom": "__not_in_ha__"}
+    with patch("custom_components.taskbandit.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"Bea": "person.bea_smith", "Tom": "__not_in_ha__"}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["member_map"] == {BEA: "person.bea_smith", "m-tom": "__not_in_ha__"}
+    # The guest isn't a member and isn't asked about again.
+    assert sorted(result["options"]["known_persons"]) == ["person.bea_smith", "person.guest"]
+
+
+async def test_setup_without_people_skips_the_mapping(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, state_payload
+) -> None:
+    """With no people in Home Assistant there is nothing to ask."""
+    aioclient_mock.get(f"{CLOUD_API}/state", json=state_payload)
+    flow_id = await _start(hass, "cloud")
+    with patch("custom_components.taskbandit.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(flow_id, {CONF_TOKEN: TOKEN})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert set(result["options"]["member_map"].values()) == {"__not_in_ha__"}

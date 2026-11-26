@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from .const import OUTCOME_MESSAGES, SCOPE_CHORES
 from .coordinator import TaskBanditConfigEntry, TaskBanditCoordinator, async_call_api
 from .entity import TaskBanditEntity, TaskBanditMemberEntity, async_add_dynamic_entities
+from .members import member_for_context
 from .models import Chore
 
 PARALLEL_UPDATES = 1
@@ -86,7 +87,9 @@ class _ChoreTodoList(TaskBanditEntity, TodoListEntity):
             self.hass,
             entry,
             SCOPE_CHORES,
-            entry.runtime_data.client.complete_chore(item.uid),
+            entry.runtime_data.client.complete_chore(
+                item.uid, member_for_context(self.hass, dict(entry.options), self._context)
+            ),
         )
         title, message = outcome_message(
             self.hass, chore.title if chore else (item.summary or item.uid), outcome

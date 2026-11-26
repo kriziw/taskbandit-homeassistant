@@ -33,6 +33,10 @@
           "verify_ssl": "Nur ausschalten, wenn dein Server ein selbst signiertes Zertifikat nutzt"
         }
       },
+      "members": {
+        "title": "Wer ist wer",
+        "description": "Wähle für jedes TaskBandit-Mitglied in {household} die passende Person in Home Assistant, so wie man die Räume eines Saugroboters Bereichen zuordnet. Wähle „Nicht in Home Assistant“ für Mitglieder, die es nicht nutzen. Personen, die niemandem zugeordnet sind, sind einfach keine TaskBandit-Mitglieder. Davon hängt ab, wem es angerechnet wird, wenn jemand eine Routine startet oder eine Aufgabe abhakt, und wer als zu Hause gemeldet wird."
+      },
       "reauth_confirm": {
         "title": "TaskBandit erneut anmelden",
         "description": "Das Token für {url} funktioniert nicht mehr. Erstelle in TaskBandit ein neues Token und gib es hier ein.",
@@ -46,7 +50,8 @@
       "feature_disabled": "Die Home-Assistant-Funktion ist für diesen TaskBandit-Haushalt ausgeschaltet.",
       "missing_scope": "Das Token darf den Haushaltsstatus nicht lesen.",
       "cannot_connect": "Der TaskBandit-Server ist nicht erreichbar. Prüfe die Adresse.",
-      "unknown": "TaskBandit hat eine unerwartete Antwort gesendet."
+      "unknown": "TaskBandit hat eine unerwartete Antwort gesendet.",
+      "person_used_twice": "Jede Person in Home Assistant kann nur einem Mitglied zugeordnet werden."
     },
     "abort": {
       "already_configured": "Dieser Haushalt ist bereits eingerichtet.",
@@ -59,11 +64,14 @@
     "step": {
       "init": {
         "title": "TaskBandit-Optionen",
-        "description": "Wähle, wie oft abgefragt wird. Wenn Anwesenheit in TaskBandit eingeschaltet ist, ordne jeder Home-Assistant-Person ein TaskBandit-Mitglied zu, um zu melden, wer zu Hause ist.",
+        "description": "Lege fest, wie oft abgefragt wird und welche Person in Home Assistant welches TaskBandit-Mitglied ist („Nicht in Home Assistant“ für Mitglieder, die es nicht nutzen).",
         "data": {
           "scan_interval": "Abfrageintervall"
         }
       }
+    },
+    "error": {
+      "person_used_twice": "Jede Person in Home Assistant kann nur einem Mitglied zugeordnet werden."
     }
   },
   "entity": {
@@ -113,6 +121,24 @@
     "missing_scope": {
       "title": "Dem TaskBandit-Token fehlt die Berechtigung {scope}",
       "description": "Das Token für {household} darf „{scope}“ nicht verwenden. Öffne in TaskBandit Einstellungen → Integrationen → Home Assistant, erstelle ein Token mit dieser Berechtigung und richte die Integration damit neu ein."
+    },
+    "member_mapping": {
+      "title": "Prüfe, wer wer ist in TaskBandit",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Wer ist wer",
+            "description": "Wähle für jedes TaskBandit-Mitglied in {household} die Person in Home Assistant oder „Nicht in Home Assistant“."
+          }
+        },
+        "error": {
+          "person_used_twice": "Jede Person in Home Assistant kann nur einem Mitglied zugeordnet werden."
+        },
+        "abort": {
+          "not_loaded": "TaskBandit ist gerade nicht geladen. Versuche es erneut, sobald es läuft."
+        }
+      },
+      "description": "Die TaskBandit-Mitglieder von {household} und die Personen in Home Assistant passen nicht mehr zusammen: Jemand kam hinzu oder wurde entfernt. Öffne dies, um die Zuordnung zu aktualisieren."
     }
   },
   "services": {
@@ -127,6 +153,10 @@
         "config_entry_id": {
           "name": "Haushalt",
           "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        },
+        "member_id": {
+          "name": "Erledigt von",
+          "description": "Das TaskBandit-Mitglied, das es erledigt hat. Standard: das Mitglied des Home-Assistant-Benutzers, der die Aktion auslöst."
         }
       }
     },
@@ -141,6 +171,10 @@
         "config_entry_id": {
           "name": "Haushalt",
           "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        },
+        "member_id": {
+          "name": "Erledigt von",
+          "description": "Das TaskBandit-Mitglied, das es erledigt hat. Standard: das Mitglied des Home-Assistant-Benutzers, der die Aktion auslöst."
         }
       }
     },
@@ -173,6 +207,10 @@
         "config_entry_id": {
           "name": "Haushalt",
           "description": "Der TaskBandit-Haushalt. Nur nötig, wenn mehrere eingerichtet sind."
+        },
+        "member_id": {
+          "name": "Erledigt von",
+          "description": "Das TaskBandit-Mitglied, das es erledigt hat. Standard: das Mitglied des Home-Assistant-Benutzers, der die Aktion auslöst."
         }
       }
     }

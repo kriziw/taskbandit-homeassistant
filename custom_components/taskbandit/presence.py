@@ -10,7 +10,8 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.start import async_at_started
 
 from .api import TaskBanditError, TaskBanditPresenceDisabledError, TaskBanditScopeError
-from .const import CONF_PRESENCE_MAP, LOGGER, SCOPE_PRESENCE
+from .const import LOGGER, SCOPE_PRESENCE
+from .members import person_to_member
 from .coordinator import (
     TaskBanditConfigEntry,
     async_clear_missing_scope,
@@ -28,7 +29,7 @@ def _is_home(state: State | None) -> bool | None:
 @callback
 def async_setup_presence(hass: HomeAssistant, entry: TaskBanditConfigEntry) -> None:
     """Track mapped persons and send `PUT /presence` when they come or go."""
-    mapping: dict[str, str] = dict(entry.options.get(CONF_PRESENCE_MAP) or {})
+    mapping: dict[str, str] = person_to_member(dict(entry.options))
     if not mapping:
         return
     runtime = entry.runtime_data

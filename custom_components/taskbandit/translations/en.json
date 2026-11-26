@@ -33,6 +33,10 @@
           "verify_ssl": "Turn off only if your server uses a self-signed certificate"
         }
       },
+      "members": {
+        "title": "Who is who",
+        "description": "Pick the Home Assistant person for each TaskBandit member in {household}, like matching a vacuum's rooms to areas. Choose \"Not in Home Assistant\" for members who don't use it. People nobody is matched to simply aren't TaskBandit members. This decides who gets the credit when someone presses a routine button or ticks off a chore, and who is reported home."
+      },
       "reauth_confirm": {
         "title": "Reauthenticate TaskBandit",
         "description": "The token for {url} no longer works. Create a new token in TaskBandit and enter it here.",
@@ -46,7 +50,8 @@
       "feature_disabled": "The Home Assistant feature is turned off for this TaskBandit household.",
       "missing_scope": "The token isn't allowed to read the household status.",
       "cannot_connect": "Couldn't reach the TaskBandit server. Check the address.",
-      "unknown": "TaskBandit sent an unexpected response."
+      "unknown": "TaskBandit sent an unexpected response.",
+      "person_used_twice": "Each Home Assistant person can be matched to only one member."
     },
     "abort": {
       "already_configured": "This household is already set up.",
@@ -59,11 +64,14 @@
     "step": {
       "init": {
         "title": "TaskBandit options",
-        "description": "Choose how often to poll. When presence is on in TaskBandit, map each Home Assistant person to a TaskBandit member to report who is home.",
+        "description": "Choose how often to poll, and which Home Assistant person is which TaskBandit member (\"Not in Home Assistant\" for members who don't use it).",
         "data": {
           "scan_interval": "Poll interval"
         }
       }
+    },
+    "error": {
+      "person_used_twice": "Each Home Assistant person can be matched to only one member."
     }
   },
   "entity": {
@@ -113,6 +121,24 @@
     "missing_scope": {
       "title": "TaskBandit token is missing the {scope} scope",
       "description": "The token used for {household} isn't allowed to use \"{scope}\". In TaskBandit, open Settings → Integrations → Home Assistant, create a token that includes this scope, then reconfigure the integration with it."
+    },
+    "member_mapping": {
+      "title": "Check who is who in TaskBandit",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Who is who",
+            "description": "Pick the Home Assistant person for each TaskBandit member in {household}, or \"Not in Home Assistant\"."
+          }
+        },
+        "error": {
+          "person_used_twice": "Each Home Assistant person can be matched to only one member."
+        },
+        "abort": {
+          "not_loaded": "TaskBandit isn't loaded right now. Try again once it is."
+        }
+      },
+      "description": "The TaskBandit members of {household} and the people in Home Assistant no longer match up: someone was added or removed. Open this to update who is who."
     }
   },
   "services": {
@@ -127,6 +153,10 @@
         "config_entry_id": {
           "name": "Household",
           "description": "The TaskBandit household. Needed only if more than one is set up."
+        },
+        "member_id": {
+          "name": "Done by",
+          "description": "The TaskBandit member who did it. Defaults to the member of the Home Assistant user who called the action."
         }
       }
     },
@@ -141,6 +171,10 @@
         "config_entry_id": {
           "name": "Household",
           "description": "The TaskBandit household. Needed only if more than one is set up."
+        },
+        "member_id": {
+          "name": "Done by",
+          "description": "The TaskBandit member who did it. Defaults to the member of the Home Assistant user who called the action."
         }
       }
     },
@@ -173,6 +207,10 @@
         "config_entry_id": {
           "name": "Household",
           "description": "The TaskBandit household. Needed only if more than one is set up."
+        },
+        "member_id": {
+          "name": "Done by",
+          "description": "The TaskBandit member who did it. Defaults to the member of the Home Assistant user who called the action."
         }
       }
     }

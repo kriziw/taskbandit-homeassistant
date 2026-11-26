@@ -65,6 +65,11 @@ def normalize_url(url: str, default_scheme: str = "https") -> str:
     return url
 
 
+def _member(member_id: str | None) -> dict[str, str]:
+    """The body naming who did something; empty when nobody is known."""
+    return {"memberId": member_id} if member_id else {}
+
+
 def _error_details(data: Any) -> tuple[str | None, str | None, str | None]:
     """Pull code, message and scope out of an error body."""
     if not isinstance(data, dict):
@@ -146,16 +151,20 @@ class TaskBanditClient:
             raise TaskBanditApiError(200, None, "Unexpected response from /state")
         return data
 
-    async def complete_chore(self, chore_id: str) -> str:
-        """Complete a chore and return the outcome."""
+    async def complete_chore(self, chore_id: str, member_id: str | None = None) -> str:
+        """Complete a chore (done by `member_id` if it is unassigned) and return the outcome."""
         return _outcome(
-            await self._request("POST", f"/chores/{chore_id}/complete", SCOPE_CHORES)
+            await self._request(
+                "POST", f"/chores/{chore_id}/complete", SCOPE_CHORES, _member(member_id)
+            )
         )
 
-    async def start_chore(self, chore_id: str) -> str:
-        """Start a chore and return the outcome."""
+    async def start_chore(self, chore_id: str, member_id: str | None = None) -> str:
+        """Start a chore (claimed by `member_id` if it is unassigned) and return the outcome."""
         return _outcome(
-            await self._request("POST", f"/chores/{chore_id}/start", SCOPE_CHORES)
+            await self._request(
+                "POST", f"/chores/{chore_id}/start", SCOPE_CHORES, _member(member_id)
+            )
         )
 
     async def assign_chore(self, chore_id: str, member_id: str) -> str:
@@ -169,10 +178,10 @@ class TaskBanditClient:
             )
         )
 
-    async def run_routine(self, routine_id: str) -> dict[str, Any]:
-        """Run a routine and return the run."""
+    async def run_routine(self, routine_id: str, member_id: str | None = None) -> dict[str, Any]:
+        """Run a routine (for `member_id`, if given) and return the run."""
         data = await self._request(
-            "POST", f"/routines/{routine_id}/run", SCOPE_ROUTINES
+            "POST", f"/routines/{routine_id}/run", SCOPE_ROUTINES, _member(member_id)
         )
         return data if isinstance(data, dict) else {}
 
