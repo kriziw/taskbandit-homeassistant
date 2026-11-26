@@ -115,8 +115,9 @@ def config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Home",
         unique_id=HOUSEHOLD_ID,
-        version=2,
+        version=3,
         data={CONF_URL: SERVER, CONF_TOKEN: TOKEN, "hosted": True, "verify_ssl": True},
+        options={"member_map": {BEA: "__not_in_ha__", TOM: "__not_in_ha__"}, "known_persons": []},
     )
 
 

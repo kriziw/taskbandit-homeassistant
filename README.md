@@ -60,7 +60,10 @@ The integration polls TaskBandit every 60 seconds (you can change this). If Home
    - **Self-hosted server:** enter your server's address, for example `http://192.168.1.10:8080`, and the token. Turn off **Check the certificate** only if your server uses a self-signed certificate.
 
    A self-hosted server on your network usually shows up by itself as **Discovered: TaskBandit**, with the address already filled in, so you only paste the token. The server announces itself over mDNS (`_taskbandit._tcp`). In Docker that needs host networking or an Avahi service file on the host; see TaskBandit's `docs/home-assistant.md`.
-3. Optional: turn on **Presence** in TaskBandit's settings. Then open the integration's **Configure** dialog and pick a TaskBandit member for each Home Assistant person.
+3. **Who is who:** for each TaskBandit member, pick their Home Assistant person, or **Not in Home Assistant** for members who don't use it (a child without an HA account, say). It works like matching a robot vacuum's rooms to areas. Matching names are suggested. Home Assistant people nobody is matched to (guests, say) simply aren't TaskBandit members.
+   - This decides who gets the credit. A routine button pressed, or a chore ticked off, by an HA user is sent as their member: "Run by Bea · from Home Assistant", points for whoever did an unassigned chore. Automations run without a member, like a scheduled routine.
+   - It also decides who is reported home, if you turn on **Presence** in TaskBandit.
+   - Change it any time under **Configure**. When it gets out of sync (a member or person added or removed), Home Assistant raises a repair, **Check who is who in TaskBandit**, which opens the same form.
 
 **Instant updates:** besides polling, the integration registers a webhook so TaskBandit can push changes.
 - **TaskBandit Cloud** needs Home Assistant reachable over public HTTPS, for example through Home Assistant Cloud.

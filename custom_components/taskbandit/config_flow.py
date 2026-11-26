@@ -26,10 +26,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -47,16 +43,14 @@ from .api import (
 from .const import (
     CLOUD_URL,
     CONF_HOSTED,
-    CONF_PRESENCE_MAP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
     MAX_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
 )
+from .members import mapping_from_input, mapping_schema, persons
 from .models import TaskBanditState, parse_state
-
-NO_MEMBER = "__none__"
 
 TOKEN_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
@@ -111,11 +105,12 @@ class TaskBanditConfigFlow(ConfigFlow, domain=DOMAIN):
     Home Assistant then offers them with the address filled in.
     """
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Start a flow."""
         self._discovered_url: str | None = None
+        self._pending: tuple[TaskBanditState, dict[str, Any]] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -190,7 +185,31 @@ class TaskBanditConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         await self.async_set_unique_id(state.household_id, raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=data)
-        return self.async_create_entry(title=state.household_name, data=data)
+        self._pending = (state, data)
+        return await self.async_step_members()
+
+    async def async_step_members(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Which Home Assistant person is which TaskBandit member."""
+        assert self._pending is not None
+        state, data = self._pending
+        errors: dict[str, str] = {}
+        if user_input is None and not persons(self.hass):
+            # No people in Home Assistant: nobody to map, so nobody is asked.
+            user_input = {}
+        if user_input is not None:
+            mapping, errors = mapping_from_input(self.hass, state, user_input)
+            if not errors:
+                return self.async_create_entry(
+                    title=state.household_name, data=data, options=mapping
+                )
+        return self.async_show_form(
+            step_id="members",
+            data_schema=mapping_schema(self.hass, state, {}),
+            errors=errors,
+            description_placeholders={"household": state.household_name},
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -230,15 +249,13 @@ class TaskBanditConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class TaskBanditOptionsFlow(OptionsFlow):
-    """Poll interval and presence mapping."""
+    """Poll interval and the member ↔ person mapping."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the options."""
         entry = self.config_entry
-        current_map: dict[str, str] = dict(entry.options.get(CONF_PRESENCE_MAP) or {})
-
         state: TaskBanditState | None = None
         runtime = getattr(entry, "runtime_data", None)
         if runtime is not None and runtime.coordinator.data is not None:
@@ -253,21 +270,17 @@ class TaskBanditOptionsFlow(OptionsFlow):
                 )
             except (TaskBanditError, ValueError):
                 state = None
-        presence = state is not None and state.presence_enabled
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             scan_interval = int(user_input.pop(CONF_SCAN_INTERVAL))
-            if presence:
-                presence_map = {
-                    person: member
-                    for person, member in user_input.items()
-                    if member and member != NO_MEMBER
-                }
-            else:
-                presence_map = current_map
-            return self.async_create_entry(
-                data={CONF_SCAN_INTERVAL: scan_interval, CONF_PRESENCE_MAP: presence_map}
-            )
+            mapping: dict[str, Any] = {}
+            if state is not None:
+                mapping, errors = mapping_from_input(self.hass, state, user_input)
+            if not errors:
+                return self.async_create_entry(
+                    data={**entry.options, **mapping, CONF_SCAN_INTERVAL: scan_interval}
+                )
 
         fields: dict[Any, Any] = {
             vol.Required(
@@ -283,16 +296,8 @@ class TaskBanditOptionsFlow(OptionsFlow):
                 )
             )
         }
-        if presence and state is not None:
-            options = [SelectOptionDict(value=NO_MEMBER, label="—")] + [
-                SelectOptionDict(value=member.id, label=member.display_name)
-                for member in state.members.values()
-            ]
-            for person in sorted(self.hass.states.async_entity_ids("person")):
-                fields[vol.Optional(person, default=current_map.get(person, NO_MEMBER))] = (
-                    SelectSelector(
-                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
-                    )
-                )
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields))
+        if state is not None:
+            fields.update(mapping_schema(self.hass, state, dict(entry.options)).schema)
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(fields), errors=errors
+        )

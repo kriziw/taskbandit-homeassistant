@@ -6,6 +6,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .members import member_for_context
 from .const import EVENT_ROUTINE_RUN, SCOPE_ROUTINES
 from .coordinator import TaskBanditConfigEntry, TaskBanditCoordinator, async_call_api
 from .entity import TaskBanditRoutineEntity, async_add_dynamic_entities
@@ -29,12 +30,15 @@ async def async_setup_entry(
 
 
 async def async_run_routine(
-    hass: HomeAssistant, entry: TaskBanditConfigEntry, routine_id: str
+    hass: HomeAssistant,
+    entry: TaskBanditConfigEntry,
+    routine_id: str,
+    member_id: str | None = None,
 ) -> dict:
-    """Run a routine, fire `taskbandit_routine_run` and refresh."""
+    """Run a routine (for `member_id`, if known), fire `taskbandit_routine_run` and refresh."""
     runtime = entry.runtime_data
     run = await async_call_api(
-        hass, entry, SCOPE_ROUTINES, runtime.client.run_routine(routine_id)
+        hass, entry, SCOPE_ROUTINES, runtime.client.run_routine(routine_id, member_id)
     )
     routine = runtime.coordinator.data.routines.get(routine_id)
     hass.bus.async_fire(
@@ -43,6 +47,7 @@ async def async_run_routine(
             "config_entry_id": entry.entry_id,
             "routine_id": routine_id,
             "routine_name": routine.name if routine else None,
+            "member_id": member_id,
             "status": run.get("status"),
             "run": run,
         },
@@ -71,4 +76,10 @@ class RunRoutineButton(TaskBanditRoutineEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Run the routine."""
-        await async_run_routine(self.hass, self.coordinator.config_entry, self.routine_id)
+        entry = self.coordinator.config_entry
+        await async_run_routine(
+            self.hass,
+            entry,
+            self.routine_id,
+            member_for_context(self.hass, dict(entry.options), self._context),
+        )

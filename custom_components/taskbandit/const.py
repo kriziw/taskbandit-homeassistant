@@ -17,7 +17,13 @@ REQUEST_TIMEOUT: Final = 15
 
 CONF_WEBHOOK_SECRET: Final = "webhook_secret"
 CONF_CLOUDHOOK: Final = "cloudhook"
+# Before entry version 3: person entity id → member id, for presence only.
 CONF_PRESENCE_MAP: Final = "presence_map"
+# Member ↔ person mapping (see members.py): member id → person entity id or NOT_IN_HA.
+CONF_MEMBER_MAP: Final = "member_map"
+# The HA people that existed when the mapping was last saved.
+CONF_KNOWN_PERSONS: Final = "known_persons"
+NOT_IN_HA: Final = "__not_in_ha__"
 
 DEFAULT_SCAN_INTERVAL: Final = 60
 MIN_SCAN_INTERVAL: Final = 15
